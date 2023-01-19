@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Mint is ERC721, ERC721URIStorage {
+contract NFT is ERC721, ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private s_tokenId;
 
