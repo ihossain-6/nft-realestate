@@ -56,7 +56,6 @@ contract RealEstate {
         address buyer,
         address inspector,
         uint256 purchasePrice,
-        uint256 inspectionStatus,
         uint256 escrowAmount,
         string memory tokenURI
     ) external {
@@ -69,7 +68,7 @@ contract RealEstate {
             inspector,
             purchasePrice,
             escrowAmount,
-            inspectionStatus,
+            0,
             tokenURI
         );
         emit Listed(
@@ -116,6 +115,7 @@ contract RealEstate {
         List memory list = s_lists[tokenId];
         if(list.inspectionStatus == 0) {
             (bool success, ) = payable(list.buyer).call{value: list.escrowAmount}("");
+            require(success);
         }
         emit Canceled(tokenId, list.nftAddress, list.purchasePrice);
     }
