@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 error NotInspector();
 error YouAreNotBuyer();
@@ -21,7 +21,7 @@ contract RealEstate {
 
     event Listed(
         uint256 indexed tokenId,
-        uint256 indexed nftAddress,
+        address indexed nftAddress,
         address buyer,
         address seller,
         address inspector,
@@ -33,11 +33,12 @@ contract RealEstate {
 
     event UpdateInspection(
         uint256 indexed tokenId,
-        uint256 indexed nftAddress,
+        address indexed nftAddress,
         uint256 indexed pruchasePrice
     );
     event Deposited(uint256 indexed tokenId, address indexed buyer, address indexed nftAddress);
     event Sold(uint256 indexed tokenId);
+    event Canceled(uint256 indexed tokenId, address indexed nftAddress, uint256 indexed purchasePrice);
 
     mapping(uint256 => List) private s_lists;
 
@@ -46,6 +47,7 @@ contract RealEstate {
         if (msg.sender != list.buyer) {
             revert YouAreNotBuyer();
         }
+        _;
     }
 
     function list(
@@ -56,14 +58,14 @@ contract RealEstate {
         uint256 purchasePrice,
         uint256 inspectionStatus,
         uint256 escrowAmount,
-        string tokenURI
+        string memory tokenURI
     ) external {
         IERC721(nftAddress).safeTransferFrom(msg.sender, address(this), tokenId);
         s_lists[tokenId] = List(
             tokenId,
             nftAddress,
             buyer,
-            seller,
+            msg.sender,
             inspector,
             purchasePrice,
             escrowAmount,
@@ -98,24 +100,24 @@ contract RealEstate {
         emit Deposited(tokenId, msg.sender, list.nftAddress);
     }
 
-    function finalize(uint256 tokenId) external payable onlyBuyer() {
+    function finalize(uint256 tokenId) external payable onlyBuyer(tokenId) {
         List memory list = s_lists[tokenId];
         require(msg.value >= list.purchasePrice);
-        uint256 balance = address(this).balance;
-        if (balance += list.purchasePrice) {
+        if (address(this).balance > list.purchasePrice) {
             delete(list);
             (bool success, ) = payable(list.seller).call{value: list.purchasePrice}("");
             require(success);
         }
-        IERC721.transferFrom(address(this), list.nftAddress, tokenId);
+        IERC721(list.nftAddress).transferFrom(address(this), list.buyer, tokenId);
         emit Sold(tokenId);
     }
 
     function cancel(uint256 tokenId) external {
         List memory list = s_lists[tokenId];
         if(list.inspectionStatus == 0) {
-            (bool success, ) = payable(list.buyer).call{value: list.escrowAmount}("")
-        };
+            (bool success, ) = payable(list.buyer).call{value: list.escrowAmount}("");
+        }
+        emit Canceled(tokenId, list.nftAddress, list.purchasePrice);
     }
 
     function getList(uint256 tokenId) external view returns(List memory) {
