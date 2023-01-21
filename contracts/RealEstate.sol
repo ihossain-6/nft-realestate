@@ -59,7 +59,7 @@ contract RealEstate {
         uint256 escrowAmount,
         string memory tokenURI
     ) external {
-        IERC721(nftAddress).safeTransferFrom(msg.sender, address(this), tokenId);
+        IERC721(nftAddress).transferFrom(msg.sender, address(this), tokenId);
         s_lists[tokenId] = List(
             tokenId,
             nftAddress,
