@@ -1,18 +1,24 @@
 const {ethers, getNamedAccounts} = require("hardhat")
 
 async function main() {
-    const {deployer} = await getNamedAccounts()
+    const accounts = await ethers.getSigners()
+    const deployer = accounts[0]
     const nft = await ethers.getContract("NFT", deployer)
 
     console.log(`Found NFT at ${nft.address}`)
 
     console.log("Minting your NFT.....")
 
-    const address = "0x9f44dC0085f74Ee4C2319bFeB552CF0268C00122"
+    console.log(deployer.address)
+
+    const address = deployer.address
     const metadataURI = "https://ipfs.io/ipfs/QmPwp5kCCtCt5HVoeXx9WSCvsRyRTv8U2oDcyNX4eq2A6G?filename=Metadata2.json"
 
     const mintTx = await nft.mintToken(address, metadataURI)
     await mintTx.wait(1)
+
+    const total = await nft.totalSupply()
+    console.log(total.toString())
 
     console.log("NFT minted....")
 }
