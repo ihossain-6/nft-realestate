@@ -18,7 +18,7 @@ module.exports = async({getNamedAccounts, deployments}) => {
         waitConfirmations: network.config.blockConfirmations || 1,
     })
 
-    log(`Student Registration deployed at ${realEstate.address}`)
+    log(`Real Estate deployed at ${realEstate.address}`)
 
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         log("Verifying...")
