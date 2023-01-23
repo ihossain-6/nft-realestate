@@ -15,7 +15,7 @@ contract RealEstate {
         address inspector;
         uint256 purchasePrice;
         uint256 escrowAmount;
-        uint256 inspectionStatus;
+        bool inspectionStatus;
         string tokenURI;
     }
 
@@ -27,7 +27,7 @@ contract RealEstate {
         address inspector,
         uint256 indexed purchasePrice,
         uint256 escrowAmount,
-        uint256 inspectionStatus,
+        bool inspectionStatus,
         string tokenURI
     );
 
@@ -57,6 +57,7 @@ contract RealEstate {
         address inspector,
         uint256 purchasePrice,
         uint256 escrowAmount,
+        bool inspectionStatus,
         string memory tokenURI
     ) external {
         IERC721(nftAddress).transferFrom(msg.sender, address(this), tokenId);
@@ -68,7 +69,7 @@ contract RealEstate {
             inspector,
             purchasePrice,
             escrowAmount,
-            0,
+            inspectionStatus,
             tokenURI
         );
         emit Listed(
@@ -79,7 +80,7 @@ contract RealEstate {
             inspector,
             purchasePrice,
             escrowAmount,
-            0,
+            inspectionStatus,
             tokenURI
         );
     }
@@ -89,7 +90,7 @@ contract RealEstate {
         if (msg.sender != list.inspector) {
             revert NotInspector();
         }
-        list.inspectionStatus = 1;
+        s_lists[tokenId].inspectionStatus = true;
         emit UpdateInspection(tokenId, list.nftAddress, list.purchasePrice);
     }
 
@@ -113,7 +114,7 @@ contract RealEstate {
 
     function cancel(uint256 tokenId) external {
         List memory list = s_lists[tokenId];
-        if(list.inspectionStatus == 0) {
+        if(list.inspectionStatus) {
             (bool success, ) = payable(list.buyer).call{value: list.escrowAmount}("");
             require(success);
         }
