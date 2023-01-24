@@ -103,18 +103,18 @@ contract RealEstate {
     function finalize(uint256 tokenId) external payable onlyBuyer(tokenId) {
         List memory list = s_lists[tokenId];
         require(msg.value >= list.purchasePrice);
-        if (address(this).balance > list.purchasePrice) {
-            delete(list);
-            (bool success, ) = payable(list.seller).call{value: list.purchasePrice}("");
-            require(success);
-        }
+        require(list.inspectionStatus == true);
+        uint256 value = list.escrowAmount + list.purchasePrice;
+        (bool success, ) = payable(list.seller).call{value: value}("");
+        require(success);
         IERC721(list.nftAddress).transferFrom(address(this), list.buyer, tokenId);
+        delete(list);
         emit Sold(tokenId);
     }
 
     function cancel(uint256 tokenId) external {
         List memory list = s_lists[tokenId];
-        if(list.inspectionStatus) {
+        if(list.inspectionStatus == false) {
             (bool success, ) = payable(list.buyer).call{value: list.escrowAmount}("");
             require(success);
         }
